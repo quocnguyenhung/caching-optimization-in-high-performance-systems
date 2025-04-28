@@ -1,0 +1,9 @@
+/bin/
+/vendor/
+*.exe
+*.log
+*.out
+*.test
+*.db
+*.sqlite
+.env
