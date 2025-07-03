@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/internal/cache"
 	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/internal/db"
@@ -36,7 +38,10 @@ func GetTrendingFromDB(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	ids, err := db.GetTopTrendingFromDB(limit)
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
+
+	ids, err := db.GetTopTrendingFromDB(ctx, limit)
 	if err != nil {
 		http.Error(w, "Failed to fetch trending from DB", http.StatusInternalServerError)
 		return

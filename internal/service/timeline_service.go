@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/go-redis/redis"
@@ -8,15 +9,15 @@ import (
 	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/internal/db"
 )
 
-func GetTimelinePosts(userID int64) ([]db.Post, error) {
-	posts, err := db.GetTimelinePosts(userID)
+func GetTimelinePosts(ctx context.Context, userID int64) ([]db.Post, error) {
+	posts, err := db.GetTimelinePosts(ctx, userID)
 	if err != nil {
 		fmt.Println("Timeline DB error:", err) // <-- add this line
 	}
 	return posts, err
 }
 
-func GetTimelineWithCache(userID int64) ([]db.Post, error) {
+func GetTimelineWithCache(ctx context.Context, userID int64) ([]db.Post, error) {
 	posts, err := cache.GetTimelineFromCache(userID)
 	if err != nil && err != redis.Nil {
 		fmt.Println("Redis GetTimelineFromCache error:", err)
@@ -27,7 +28,7 @@ func GetTimelineWithCache(userID int64) ([]db.Post, error) {
 	}
 
 	// Cache miss — Fetch from DB
-	posts, err = db.GetTimelinePosts(userID)
+	posts, err = db.GetTimelinePosts(ctx, userID)
 	if err != nil {
 		fmt.Println("DB GetTimelinePosts error:", err) // <-- Add this print
 		return nil, err
