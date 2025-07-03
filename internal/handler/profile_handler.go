@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/internal/service"
 )
@@ -22,7 +24,10 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	profile, err := service.GetUserProfile(userID)
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
+
+	profile, err := service.GetUserProfile(ctx, userID)
 	if err != nil {
 		http.Error(w, "Failed to get profile", http.StatusInternalServerError)
 		return
