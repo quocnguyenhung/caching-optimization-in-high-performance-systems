@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -9,8 +10,8 @@ import (
 	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/internal/db"
 )
 
-func CreatePost(userID int64, content string) error {
-	postID, err := db.CreatePost(userID, content)
+func CreatePost(ctx context.Context, userID int64, content string) error {
+	postID, err := db.CreatePost(ctx, userID, content)
 	if err != nil {
 		return err
 	}
@@ -27,7 +28,7 @@ func CreatePost(userID int64, content string) error {
 		_ = cache.SetPostToCache(post)
 
 		// Fan-out to followers
-		followerIDs, err := db.GetFollowers(userID)
+		followerIDs, err := db.GetFollowers(ctx, userID)
 		if err == nil {
 			for _, followerID := range followerIDs {
 				_ = cache.PushPostToTimelineCache(followerID, post)
@@ -38,12 +39,12 @@ func CreatePost(userID int64, content string) error {
 	return nil
 }
 
-func FollowUser(followerID, followedID int64) error {
+func FollowUser(ctx context.Context, followerID, followedID int64) error {
 	if followerID == followedID {
 		return errors.New("you cannot follow yourself")
 	}
 
-	exists, err := db.CheckFollowExists(followerID, followedID)
+	exists, err := db.CheckFollowExists(ctx, followerID, followedID)
 	if err != nil {
 		return err
 	}
@@ -51,11 +52,11 @@ func FollowUser(followerID, followedID int64) error {
 		return errors.New("already following this user")
 	}
 
-	return db.FollowUser(followerID, followedID)
+	return db.FollowUser(ctx, followerID, followedID)
 }
 
-func LikePost(userID, postID int64) error {
-	err := db.LikePost(userID, postID)
+func LikePost(ctx context.Context, userID, postID int64) error {
+	err := db.LikePost(ctx, userID, postID)
 	if err != nil {
 		return err
 	}

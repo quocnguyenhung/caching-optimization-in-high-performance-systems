@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -28,6 +29,11 @@ func ConnectDB() error {
 	if err != nil {
 		return fmt.Errorf("failed to open database: %v", err)
 	}
+
+	// Set reasonable connection pool limits for high concurrency
+	DB.SetMaxOpenConns(50)
+	DB.SetMaxIdleConns(25)
+	DB.SetConnMaxLifetime(5 * time.Minute)
 
 	// Check connection
 	if err = DB.Ping(); err != nil {
