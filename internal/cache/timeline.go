@@ -6,12 +6,47 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-redis/redis"
 	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/internal/config"
 	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/internal/db"
+	"github.com/redis/go-redis/v9"
 )
 
-const timelineTTL = 5 * time.Minute // Cache expires after 5 mins
+const timelineTTL = 5 * time.Minute // Default cache TTL
+
+func minDuration(a, b time.Duration) time.Duration {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func maxDuration(a, b time.Duration) time.Duration {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+// getAdaptiveTTL calculates TTL based on post volume when adaptive mode is enabled.
+func getAdaptiveTTL(postCount int) time.Duration {
+	if !config.EnableAdaptiveTTL {
+		return timelineTTL
+	}
+
+	rate := postCount
+	var newTTL time.Duration
+
+	switch {
+	case rate > config.TimelineHighThreshold:
+		newTTL = minDuration(config.TimelineMaxTTL, 2*config.TimelineMinTTL)
+	case rate < config.TimelineLowThreshold:
+		newTTL = maxDuration(config.TimelineMinTTL, config.TimelineMinTTL/2)
+	default:
+		return timelineTTL
+	}
+
+	return newTTL
+}
 
 func GetTimelineFromCache(userID int64) ([]db.Post, error) {
 	key := fmt.Sprintf("timeline:%d", userID)
@@ -44,7 +79,8 @@ func SetTimelineToCache(userID int64, posts []db.Post) error {
 	}
 
 	ctx := context.Background()
-	return config.RedisClient.Set(ctx, key, data, timelineTTL).Err()
+	ttl := getAdaptiveTTL(len(posts))
+	return config.RedisClient.Set(ctx, key, data, ttl).Err()
 }
 
 func PushPostToTimelineCache(userID int64, post db.Post) error {
@@ -73,5 +109,6 @@ func PushPostToTimelineCache(userID int64, post db.Post) error {
 
 	// Save updated timeline back
 	data, _ := json.Marshal(posts)
-	return config.RedisClient.Set(ctx, key, data, timelineTTL).Err()
+	ttl := getAdaptiveTTL(len(posts))
+	return config.RedisClient.Set(ctx, key, data, ttl).Err()
 }
