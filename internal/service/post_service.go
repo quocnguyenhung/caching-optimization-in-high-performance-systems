@@ -8,6 +8,7 @@ import (
 	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/internal/cache"
 	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/internal/config"
 	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/internal/db"
+	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/pkg/utils"
 )
 
 func CreatePost(ctx context.Context, userID int64, content string) error {
@@ -27,11 +28,13 @@ func CreatePost(ctx context.Context, userID int64, content string) error {
 		// Write-through caching
 		_ = cache.SetPostToCache(post)
 
-		// Fan-out to followers
+		// Fan-out to followers' timelines if they use cache
 		followerIDs, err := db.GetFollowers(ctx, userID)
 		if err == nil {
 			for _, followerID := range followerIDs {
-				_ = cache.PushPostToTimelineCache(followerID, post)
+				if utils.UseCache(followerID) {
+					_ = cache.PushPostToTimelineCache(followerID, post)
+				}
 			}
 		}
 	}

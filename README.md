@@ -37,7 +37,7 @@ It simulates core social media functionalities such as user signup/login, follow
   - Fan-out on Write
   - Trending Cache
   - Profile Cache
-  - Adaptive TTL for timelines (toggle via `ENABLE_ADAPTIVE_TTL`)
+  - Adaptive TTL for timelines (toggle via `ADAPTIVE_TTL_ENABLED`)
 
 ---
 

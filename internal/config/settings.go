@@ -5,11 +5,11 @@ import (
 	"time"
 )
 
-var EnableCaching = true
+// EnableCaching controls whether Redis should be used.
+var EnableCaching = os.Getenv("CACHE_ENABLED") != "false"
 
 // EnableAdaptiveTTL toggles dynamic TTL calculation for timelines.
-// Controlled via the ENABLE_ADAPTIVE_TTL environment variable.
-var EnableAdaptiveTTL = os.Getenv("ENABLE_ADAPTIVE_TTL") == "true"
+var EnableAdaptiveTTL = os.Getenv("ADAPTIVE_TTL_ENABLED") == "true"
 
 // Timeline cache TTL settings used when adaptive mode is enabled.
 const (
