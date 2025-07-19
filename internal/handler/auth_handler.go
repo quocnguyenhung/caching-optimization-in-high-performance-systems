@@ -13,7 +13,7 @@ type SignupRequest struct {
 	Password string `json:"password"`
 }
 
-func Signup(w http.ResponseWriter, r *http.Request) {
+func Register(w http.ResponseWriter, r *http.Request) {
 	var req SignupRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
@@ -35,7 +35,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Signup successful"))
+	w.Write([]byte("Registered successfully"))
 }
 
 type LoginRequest struct {

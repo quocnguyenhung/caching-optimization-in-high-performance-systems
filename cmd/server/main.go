@@ -38,17 +38,15 @@ func main() {
 	fmt.Println("Test Redis Key:", val)
 
 	// Public routes
-	http.HandleFunc("/signup", handler.Signup)
-	http.HandleFunc("/login", handler.Login)
+	http.HandleFunc("/auth/register", handler.Register)
+	http.HandleFunc("/auth/login", handler.Login)
 
 	// Protected routes
 	http.Handle("/posts", middleware.AuthMiddleware(http.HandlerFunc(handler.CreatePost)))
 	http.Handle("/posts/", middleware.AuthMiddleware(http.HandlerFunc(handler.LikePost)))
 	http.Handle("/follow/", middleware.AuthMiddleware(http.HandlerFunc(handler.FollowUser)))
-	http.Handle("/timeline/db", middleware.AuthMiddleware(http.HandlerFunc(handler.GetTimelineFromDB)))
-	http.Handle("/timeline/cache", middleware.AuthMiddleware(http.HandlerFunc(handler.GetTimelineWithCache)))
-	http.Handle("/trending/cache", http.HandlerFunc(handler.GetTrendingWithCache))
-	http.Handle("/trending/db", http.HandlerFunc(handler.GetTrendingFromDB))
+	http.Handle("/timeline", middleware.AuthMiddleware(http.HandlerFunc(handler.GetTimeline)))
+	http.Handle("/trending", http.HandlerFunc(handler.GetTrending))
 	http.Handle("/profile/", http.HandlerFunc(handler.GetProfile))
 
 	fmt.Println("Server running on :8080")
