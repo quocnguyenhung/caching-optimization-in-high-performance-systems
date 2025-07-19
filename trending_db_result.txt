@@ -1,0 +1,8 @@
+Running 5s test @ http://localhost:8080/trending
+  2 threads and 20 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   771.29us    1.58ms  27.68ms   92.93%
+    Req/Sec    25.24k     6.03k   35.61k    74.00%
+  251186 requests in 5.01s, 34.26MB read
+Requests/sec:  50169.66
+Transfer/sec:      6.84MB
