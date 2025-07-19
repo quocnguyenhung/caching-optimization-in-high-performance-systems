@@ -61,12 +61,22 @@ func createTables() error {
 	);`
 
 	postTable := `
-	CREATE TABLE IF NOT EXISTS posts (
-		id SERIAL PRIMARY KEY,
-		user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-		content TEXT NOT NULL,
-		created_at TIMESTAMP DEFAULT now()
-	);`
+        CREATE TABLE IF NOT EXISTS posts (
+                id SERIAL PRIMARY KEY,
+                user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                content TEXT NOT NULL,
+                likes INT DEFAULT 0,
+                created_at TIMESTAMP DEFAULT now()
+        );`
+
+	likeTable := `
+        CREATE TABLE IF NOT EXISTS likes (
+                id SERIAL PRIMARY KEY,
+                user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                post_id INT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+                created_at TIMESTAMP DEFAULT now(),
+                UNIQUE(user_id, post_id)
+        );`
 
 	followTable := `
 	CREATE TABLE IF NOT EXISTS follows (
@@ -85,6 +95,11 @@ func createTables() error {
 		return err
 	}
 	_, err = DB.Exec(followTable)
+	if err != nil {
+		return err
+	}
+
+	_, err = DB.Exec(likeTable)
 	if err != nil {
 		return err
 	}

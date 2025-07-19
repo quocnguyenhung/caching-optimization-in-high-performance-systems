@@ -48,26 +48,26 @@ func getAdaptiveTTL(postCount int) time.Duration {
 	return newTTL
 }
 
-func GetTimelineFromCache(userID int64) ([]db.Post, error) {
+func GetTimelineFromCache(userID int64) ([]db.Post, bool, error) {
 	key := fmt.Sprintf("timeline:%d", userID)
 
 	ctx := context.Background()
 	val, err := config.RedisClient.Get(ctx, key).Result()
 	if err == redis.Nil {
 		// cache miss
-		return nil, nil
+		return nil, false, nil
 	}
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	var posts []db.Post
 	err = json.Unmarshal([]byte(val), &posts)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
-	return posts, nil
+	return posts, true, nil
 }
 
 func SetTimelineToCache(userID int64, posts []db.Post) error {

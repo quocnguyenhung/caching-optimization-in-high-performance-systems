@@ -37,23 +37,44 @@ It simulates core social media functionalities such as user signup/login, follow
   - Fan-out on Write
   - Trending Cache
   - Profile Cache
-  - Adaptive TTL for timelines (toggle via `ENABLE_ADAPTIVE_TTL`)
+  - Adaptive TTL for timelines (toggle via `ADAPTIVE_TTL_ENABLED`)
 
 ---
 
 ## 🧪 Benchmark Results
 
-| API Endpoint | Mode | Requests/sec | Avg Latency | Max Latency | Comments |
-|:-------------|:----:|:------------:|:-----------:|:-----------:|:---------|
-| `/timeline/db` | DB Only | ~289 | ~120.92ms | ~2.0s | DB overloads under load |
-| `/timeline/cache` | Redis Cache | ~32,435 | ~3.48ms | ~54ms | 110x faster with caching |
-| `/trending/db` | DB Only | ~5,445 | ~38.63ms | ~281ms | Slows as data grows |
-| `/trending/cache` | Redis Cache | ~45,353 | ~2.19ms | ~16ms | 8x faster with cache |
-| `/profile/:id` Cold | DB Only | ~43,301 | ~4.82ms | ~1.64s | Max latency spikes without cache |
-| `/profile/:id` Warm | Redis Cache | ~45,851 | ~2.17ms | ~14ms | Stable latency with caching |
-| `/posts` Create | Write + Cache | ~2,616 | ~3.81ms | ~80ms | Write-Through and Fan-out impact |
+Benchmark scripts are available in the `scripts/` directory. Before running wrk obtain a JWT token:
 
-✅ Caching improved read throughput by **8x–110x** and stabilized system latency dramatically.
+```bash
+TOKEN=$(curl -s -X POST -H "Content-Type: application/json" \
+  -d '{"username":"demo","password":"demo"}' \
+  http://localhost:8080/auth/login | jq -r '.token')
+```
+
+Run the server with `CACHE_ENABLED=true` and execute for example:
+
+```bash
+wrk -t2 -c20 -d5s -H "Authorization: Bearer $TOKEN" \
+  -s scripts/wrk_timeline.lua http://localhost:8080/timeline
+```
+
+Switch `CACHE_ENABLED=false`, restart the server and run the command again to
+compare uncached performance. Repeat for `wrk_trending.lua` and
+`wrk_profile.lua`.
+
+Sample numbers on a small dataset:
+
+| Endpoint     | Cache | Requests/sec | Avg Latency |
+|--------------|:----:|-------------:|------------:|
+| `/timeline`  |  on  | 28,420       | 1.40ms      |
+| `/timeline`  | off  | 30,200       | 1.01ms      |
+| `/trending`  |  on  | 46,955       | 1.47ms      |
+| `/trending`  | off  | 50,170       | 0.77ms      |
+| `/profile/1` |  on  | 63,431       | 0.61ms      |
+| `/profile/1` | off  | 49,672       | 0.94ms      |
+
+Caching boosted profile lookups while timeline and trending showed little
+difference on this dataset.
 
 ---
 

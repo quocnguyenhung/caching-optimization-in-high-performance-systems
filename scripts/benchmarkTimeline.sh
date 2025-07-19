@@ -4,12 +4,12 @@
 THREADS=4
 CONNECTIONS=100
 DURATION=30
-TARGET_DB="http://localhost:8080/timeline/db"
-TARGET_CACHE="http://localhost:8080/timeline/cache"
+TARGET_DB="http://localhost:8080/timeline"
+TARGET_CACHE="http://localhost:8080/timeline"
 SCRIPT_PATH="scripts/wrk_timeline.lua"
 
 # Benchmark Timeline DB
-echo "===== Benchmarking /timeline/db (Database only) ====="
+echo "===== Benchmarking /timeline (Database only) ====="
 wrk -t$THREADS -c$CONNECTIONS -d${DURATION}s -s $SCRIPT_PATH $TARGET_DB > db_result.txt
 
 # Extract metrics for DB
@@ -20,7 +20,7 @@ TRANSFER_DB=$(grep "Transfer/sec" db_result.txt | awk '{print $2}')
 NON2XX_DB=$(grep "Non-2xx" db_result.txt | awk '{print $4}')
 
 # Benchmark Timeline Cache
-echo "===== Benchmarking /timeline/cache (Redis Cache) ====="
+echo "===== Benchmarking /timeline (Redis Cache) ====="
 wrk -t$THREADS -c$CONNECTIONS -d${DURATION}s -s $SCRIPT_PATH $TARGET_CACHE > cache_result.txt
 
 # Extract metrics for Cache

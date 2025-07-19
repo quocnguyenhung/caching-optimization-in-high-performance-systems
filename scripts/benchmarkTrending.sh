@@ -4,12 +4,12 @@
 THREADS=4
 CONNECTIONS=100
 DURATION=30
-TARGET_DB="http://localhost:8080/trending/db"
-TARGET_CACHE="http://localhost:8080/trending/cache"
+TARGET_DB="http://localhost:8080/trending"
+TARGET_CACHE="http://localhost:8080/trending"
 SCRIPT_PATH="scripts/wrk_trending.lua"
 
 # Benchmark Trending DB
-echo "===== Benchmarking /trending/db (Database Query) ====="
+echo "===== Benchmarking /trending (Database Query) ====="
 wrk -t$THREADS -c$CONNECTIONS -d${DURATION}s -s $SCRIPT_PATH $TARGET_DB > db_result.txt
 
 # Extract metrics for DB
@@ -20,7 +20,7 @@ TRANSFER_DB=$(grep "Transfer/sec" db_result.txt | awk '{print $2}')
 NON2XX_DB=$(grep "Non-2xx" db_result.txt | awk '{print $4}')
 
 # Benchmark Trending Cache
-echo "===== Benchmarking /trending/cache (Redis Cache) ====="
+echo "===== Benchmarking /trending (Redis Cache) ====="
 wrk -t$THREADS -c$CONNECTIONS -d${DURATION}s -s $SCRIPT_PATH $TARGET_CACHE > cache_result.txt
 
 # Extract metrics for Cache

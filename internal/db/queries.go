@@ -140,6 +140,11 @@ func LikePost(ctx context.Context, userID, postID int64) error {
 	c, cancel := context.WithTimeout(ctx, dbTimeout)
 	defer cancel()
 	_, err := config.DB.ExecContext(c, query, userID, postID)
+	if err != nil {
+		return err
+	}
+
+	_, err = config.DB.ExecContext(c, "UPDATE posts SET likes = likes + 1 WHERE id=$1", postID)
 	return err
 }
 
