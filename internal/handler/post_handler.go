@@ -1,12 +1,10 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/internal/middleware"
 	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/internal/service"
@@ -31,10 +29,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	// Get userID from context
 	userID := r.Context().Value(middleware.ContextUserID).(int64)
 
-	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
-	defer cancel()
-
-	err := service.CreatePost(ctx, userID, req.Content)
+	err := service.CreatePost(userID, req.Content)
 	if err != nil {
 		http.Error(w, "Failed to create post", http.StatusInternalServerError)
 		return
@@ -58,10 +53,7 @@ func FollowUser(w http.ResponseWriter, r *http.Request) {
 
 	followerID := r.Context().Value(middleware.ContextUserID).(int64)
 
-	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
-	defer cancel()
-
-	err = service.FollowUser(ctx, followerID, followedID)
+	err = service.FollowUser(followerID, followedID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -87,9 +79,7 @@ func LikePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
-	defer cancel()
-	err = service.LikePost(ctx, userID, postID)
+	err = service.LikePost(userID, postID)
 	if err != nil {
 		http.Error(w, "Failed to like post", http.StatusInternalServerError)
 		return

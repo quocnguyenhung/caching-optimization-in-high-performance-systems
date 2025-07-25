@@ -2,7 +2,7 @@
 
 # Configurable parameters
 THREADS=4
-CONNECTIONS=100
+CONNECTIONS=100000
 DURATION=30
 USER_ID=3 
 TARGET_PROFILE="http://localhost:8080/profile/$USER_ID"

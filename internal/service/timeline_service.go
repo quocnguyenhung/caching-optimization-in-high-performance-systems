@@ -1,45 +1,38 @@
 package service
 
 import (
-	"context"
-	"log"
+	"fmt"
 
 	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/internal/cache"
-	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/internal/config"
 	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/internal/db"
-	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/pkg/utils"
-	"github.com/redis/go-redis/v9"
 )
 
-func GetTimelinePosts(ctx context.Context, userID int64) ([]db.Post, error) {
-	posts, err := db.GetTimelinePosts(ctx, userID)
+func GetTimelinePosts(userID int64) ([]db.Post, error) {
+	posts, err := db.GetTimelinePosts(userID)
 	if err != nil {
-		log.Printf("Timeline DB error: %v", err)
+		fmt.Println("Timeline DB error:", err)
 	}
 	return posts, err
 }
 
-func GetTimeline(ctx context.Context, userID int64) ([]db.Post, bool, error) {
-	if config.EnableCaching && utils.UseCache(userID) {
-		posts, hit, err := cache.GetTimelineFromCache(userID)
-		if err != nil && err != redis.Nil {
-			log.Printf("Redis GetTimelineFromCache error: %v", err)
-			return nil, false, err
-		}
-		if hit {
-			return posts, true, nil
-		}
-
-		posts, err = db.GetTimelinePosts(ctx, userID)
-		if err != nil {
-			log.Printf("DB GetTimelinePosts error: %v", err)
-			return nil, false, err
-		}
-
-		_ = cache.SetTimelineToCache(userID, posts)
-		return posts, false, nil
+func GetTimelineWithCache(userID int64) ([]db.Post, error) {
+	posts, err := cache.GetTimelineFromCache(userID)
+	if err != nil {
+		fmt.Println("Redis GetTimelineFromCache error:", err)
+		return nil, err
+	}
+	if posts != nil {
+		return posts, nil
 	}
 
-	posts, err := db.GetTimelinePosts(ctx, userID)
-	return posts, false, err
+	// Cache miss — Fetch from DB
+	posts, err = db.GetTimelinePosts(userID)
+	if err != nil {
+		fmt.Println("DB GetTimelinePosts error:", err)
+		return nil, err
+	}
+
+	_ = cache.SetTimelineToCache(userID, posts)
+
+	return posts, nil
 }

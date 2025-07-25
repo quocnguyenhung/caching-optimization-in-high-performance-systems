@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -29,11 +28,6 @@ func ConnectDB() error {
 	if err != nil {
 		return fmt.Errorf("failed to open database: %v", err)
 	}
-
-	// Set reasonable connection pool limits for high concurrency
-	DB.SetMaxOpenConns(50)
-	DB.SetMaxIdleConns(25)
-	DB.SetConnMaxLifetime(5 * time.Minute)
 
 	// Check connection
 	if err = DB.Ping(); err != nil {
@@ -61,22 +55,12 @@ func createTables() error {
 	);`
 
 	postTable := `
-        CREATE TABLE IF NOT EXISTS posts (
-                id SERIAL PRIMARY KEY,
-                user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                content TEXT NOT NULL,
-                likes INT DEFAULT 0,
-                created_at TIMESTAMP DEFAULT now()
-        );`
-
-	likeTable := `
-        CREATE TABLE IF NOT EXISTS likes (
-                id SERIAL PRIMARY KEY,
-                user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                post_id INT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-                created_at TIMESTAMP DEFAULT now(),
-                UNIQUE(user_id, post_id)
-        );`
+	CREATE TABLE IF NOT EXISTS posts (
+		id SERIAL PRIMARY KEY,
+		user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		content TEXT NOT NULL,
+		created_at TIMESTAMP DEFAULT now()
+	);`
 
 	followTable := `
 	CREATE TABLE IF NOT EXISTS follows (
@@ -95,11 +79,6 @@ func createTables() error {
 		return err
 	}
 	_, err = DB.Exec(followTable)
-	if err != nil {
-		return err
-	}
-
-	_, err = DB.Exec(likeTable)
 	if err != nil {
 		return err
 	}

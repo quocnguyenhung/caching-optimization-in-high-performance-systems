@@ -1,12 +1,10 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/quocnguyenhung/caching-optimization-in-high-performance-systems/internal/service"
 )
@@ -24,19 +22,10 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
-	defer cancel()
-
-	profile, hit, err := service.GetUserProfile(ctx, userID)
+	profile, err := service.GetUserProfile(userID)
 	if err != nil {
 		http.Error(w, "Failed to get profile", http.StatusInternalServerError)
 		return
-	}
-
-	if hit {
-		w.Header().Set("X-Cache", "HIT")
-	} else {
-		w.Header().Set("X-Cache", "MISS")
 	}
 
 	json.NewEncoder(w).Encode(profile)

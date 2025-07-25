@@ -1,8 +1,9 @@
-Running 5s test @ http://localhost:8080/timeline
-  2 threads and 20 connections
+Running 30s test @ http://localhost:8080/trending/cache
+  4 threads and 100000 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     1.40ms    3.08ms  44.26ms   93.88%
-    Req/Sec    14.31k     4.16k   21.12k    73.00%
-  142593 requests in 5.02s, 140.75MB read
-Requests/sec:  28420.90
-Transfer/sec:     28.05MB
+    Latency   192.84ms   74.50ms   1.86s    84.58%
+    Req/Sec     7.59k     3.17k   14.88k    68.04%
+  533421 requests in 30.05s, 61.55MB read
+  Socket errors: connect 89769, read 762, write 0, timeout 252
+Requests/sec:  17753.26
+Transfer/sec:      2.05MB

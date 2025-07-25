@@ -1,81 +1,77 @@
-# Caching Optimization in High-Performance Systems
 
-This project is the final thesis of Quoc Nguyen Hung, aiming to build a scalable social media backend system like Twitter, optimized using multi-layer caching techniques.
+# Caching Optimization for High-Performance Systems
 
----
+This project demonstrates various caching strategies in the context of a social media backend system. It is the implementation for the thesis _"Caching Optimization for High-Performance Systems"_, using Go, PostgreSQL, and Redis to evaluate performance under different conditions.
 
-## 📚 Project Overview
+## 🔧 Features
 
-The system is developed using **Go**, **PostgreSQL**, **Redis**, **Docker**, and **wrk** for benchmarking.  
-It simulates core social media functionalities such as user signup/login, following, posting, and viewing timelines, then applies various caching strategies to optimize performance.
+- JWT authentication
+- Write-through cache and fan-out on write (timeline)
+- Redis ZSet for trending
+- Adaptive TTL cache control
+- Full benchmarking pipeline using `wrk` and Lua scripting
 
----
+## 📁 Technologies Used
 
-## 🚀 Technologies Used
+- Go
+- PostgreSQL
+- Redis
+- wrk (HTTP benchmarking)
+- Lua (for scripted requests)
 
-- **Golang** — Backend development
-- **PostgreSQL** — Relational database
-- **Redis** — Caching layer
-- **Docker** — Environment setup
-- **wrk** — HTTP benchmarking tool
+## .env file
+DB_HOST=localhost
+DB_PORT=5433
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=thesis_db
+REDIS_ADDR=localhost:6379
+JWT_SECRET=myStrongSecretKeyHere
 
----
 
-## 🛠️ Features Implemented
+## 🚀 How to Run
 
-- User signup/login with JWT authentication
-- Follow and unfollow users
-- Post creation
-- Timeline fetching (from followed users' posts)
-- Like posts
-- Trending posts view
-- User profile view
-- Multi-layer caching strategies:
-  - No Cache (Baseline)
-  - Timeline Caching
-  - Write-Through Caching
-  - Fan-out on Write
-  - Trending Cache
-  - Profile Cache
-  - Adaptive TTL for timelines (toggle via `ADAPTIVE_TTL_ENABLED`)
-
----
-
-## 🧪 Benchmark Results
-
-Benchmark scripts are available in the `scripts/` directory. Before running wrk obtain a JWT token:
-
+### 1. Start the Server
 ```bash
-TOKEN=$(curl -s -X POST -H "Content-Type: application/json" \
-  -d '{"username":"demo","password":"demo"}' \
-  http://localhost:8080/auth/login | jq -r '.token')
+go run cmd/server/main.go
 ```
 
-Run the server with `CACHE_ENABLED=true` and execute for example:
-
+### 2. Make Scripts Executable
 ```bash
-wrk -t2 -c20 -d5s -H "Authorization: Bearer $TOKEN" \
-  -s scripts/wrk_timeline.lua http://localhost:8080/timeline
+chmod +x scripts/benchmarkTimeline.sh
+chmod +x scripts/benchmarkTrending.sh
+chmod +x scripts/benchmarkProfile.sh
 ```
 
-Switch `CACHE_ENABLED=false`, restart the server and run the command again to
-compare uncached performance. Repeat for `wrk_trending.lua` and
-`wrk_profile.lua`.
+### 3. Run Benchmarks
+```bash
+./scripts/benchmarkTimeline.sh
+./scripts/benchmarkTrending.sh
+./scripts/benchmarkProfile.sh
+```
 
-Sample numbers on a small dataset:
+### 4. User Setup
+```bash
+curl -X POST http://localhost:8080/signup -H "Content-Type: application/json" -d '{"username":"user2", "password":"password2"}'
+curl -X POST http://localhost:8080/login -H "Content-Type: application/json" -d '{"username":"user1", "password":"password1"}'
+```
 
-| Endpoint     | Cache | Requests/sec | Avg Latency |
-|--------------|:----:|-------------:|------------:|
-| `/timeline`  |  on  | 28,420       | 1.40ms      |
-| `/timeline`  | off  | 30,200       | 1.01ms      |
-| `/trending`  |  on  | 46,955       | 1.47ms      |
-| `/trending`  | off  | 50,170       | 0.77ms      |
-| `/profile/1` |  on  | 63,431       | 0.61ms      |
-| `/profile/1` | off  | 49,672       | 0.94ms      |
+### 5. Benchmarking Individual Endpoints
+- Set JWT token in `.lua` script for authorization headers.
+- Use `wrk` to test endpoints.
 
-Caching boosted profile lookups while timeline and trending showed little
-difference on this dataset.
+## 📊 Benchmark Results Summary
 
----
-
+| Endpoint         | Strategy                    | Requests/sec | Avg Latency | Max Latency | Transfer/sec | Key Observations                                      |
+|------------------|-----------------------------|--------------|-------------|-------------|---------------|-------------------------------------------------------|
+| `/posts`         | DB Only                     | 54,176       | 87.67 ms    | 1.98 s      | 8.99 MB/s     | No caching; high throughput.                         |
+| `/posts`         | Write-Through + Fan-Out     | 47,302       | 118.18 ms   | 1.98 s      | 7.85 MB/s     | Slightly slower due to Redis and fan-out writes.     |
+| `/timeline`      | DB Only                     | 2,987        | 70.58 ms    | 2.00 s      | 0.60 MB/s     | Low performance due to join-heavy DB operations.     |
+| `/timeline`      | Fan-Out Caching             | 23,327       | 27.68 ms    | 2.00 s      | 4.35 MB/s     | ~8× faster; Redis list accelerates feed retrieval.   |
+| `/trending`      | DB Only                     | 6,528        | 265.49 ms   | 2.00 s      | 1.23 MB/s     | Slow due to aggregation/sorting logic.               |
+| `/trending`      | ZSet Cache                  | 17,753       | 192.84 ms   | 1.86 s      | 2.05 MB/s     | ~2.7× speedup; Redis ZSet enables fast ranking.      |
+| `/trending/ttl`  | Adaptive TTL (Conventional) | 33,149       | 293.75 ms   | 399.51 ms   | 5.93 MB/s     | Best throughput overall; stable TTL for hot content. |
+| `/trending/ttl`  | Adaptive TTL (Inverted)     | 17,742       | 278.87 ms   | 675.44 ms   | 3.11 MB/s     | Lower throughput; frequent evictions.                |
+| `/profile/:id`   | Cold Cache (DB only)        | 32,306       | 208.94 ms   | 1.92 s      | 6.28 MB/s     | Moderate latency with many misses.                   |
+| `/profile/:id`   | Warm Cache (Redis hit)      | 40,529       | 232.29 ms   | 300.73 ms   | 7.89 MB/s     | Improved throughput and lower DB load.               |
 

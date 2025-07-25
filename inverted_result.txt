@@ -1,0 +1,10 @@
+Running 30s test @ http://localhost:8080/trending/ttl?mode=inverted
+  4 threads and 100000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    49.83ms   46.02ms   1.58s    96.33%
+    Req/Sec    20.12k     5.27k   43.30k    66.58%
+  2384593 requests in 30.11s, 400.25MB read
+  Socket errors: connect 89769, read 0, write 0, timeout 0
+  Non-2xx or 3xx responses: 2384593
+Requests/sec:  79206.45
+Transfer/sec:     13.29MB

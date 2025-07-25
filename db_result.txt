@@ -1,8 +1,10 @@
-Running 5s test @ http://localhost:8080/timeline
-  2 threads and 20 connections
+Running 30s test @ http://localhost:8080/trending/db
+  4 threads and 100000 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     1.01ms    1.55ms  34.29ms   91.91%
-    Req/Sec    15.18k     3.28k   21.64k    74.00%
-  151171 requests in 5.01s, 149.21MB read
-Requests/sec:  30200.63
-Transfer/sec:     29.81MB
+    Latency   265.49ms  289.08ms   2.00s    92.07%
+    Req/Sec     1.68k     1.45k   12.20k    82.43%
+  196092 requests in 30.04s, 37.01MB read
+  Socket errors: connect 89913, read 8144, write 0, timeout 8916
+  Non-2xx or 3xx responses: 183137
+Requests/sec:   6527.56
+Transfer/sec:      1.23MB
