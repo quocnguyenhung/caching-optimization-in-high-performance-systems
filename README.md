@@ -41,6 +41,7 @@ go run cmd/server/main.go
 chmod +x scripts/benchmarkTimeline.sh
 chmod +x scripts/benchmarkTrending.sh
 chmod +x scripts/benchmarkProfile.sh
+chmod +x benchmark_trending_ttl.sh
 ```
 
 ### 3. Run Benchmarks
@@ -48,6 +49,7 @@ chmod +x scripts/benchmarkProfile.sh
 ./scripts/benchmarkTimeline.sh
 ./scripts/benchmarkTrending.sh
 ./scripts/benchmarkProfile.sh
+./benchmark_trending_ttl.sh # tests conventional vs inverted TTL
 ```
 
 ### 4. User Setup
@@ -57,8 +59,70 @@ curl -X POST http://localhost:8080/login -H "Content-Type: application/json" -d 
 ```
 
 ### 5. Benchmarking Individual Endpoints
-- Set JWT token in `.lua` script for authorization headers.
-- Use `wrk` to test endpoints.
+Set your JWT in the Lua scripts under `scripts/` before running the following
+benchmark commands.
+
+- **Posts**
+  ```bash
+  wrk -t4 -c1000 -d30s -s scripts/wrk_create_post.lua http://localhost:8080/posts
+  ```
+- **Timeline (DB vs Cache)**
+  ```bash
+  ./scripts/benchmarkTimeline.sh
+  ```
+- **Profile (Cold vs Warm)**
+  ```bash
+  ./scripts/benchmarkProfile.sh
+  ```
+- **Trending (DB vs Static TTL Cache)**
+  ```bash
+  ./scripts/benchmarkTrending.sh
+  ```
+- **Adaptive TTL – Conventional & Inverted**
+  ```bash
+  ./benchmark_trending_ttl.sh
+  ```
+
+## 🧪 API Testing Guide
+Use the JWT returned from `/login` in the `Authorization` header for protected routes.
+
+### Creating Posts
+```bash
+curl -X POST http://localhost:8080/posts \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"hello world"}'
+```
+
+### Following Users
+```bash
+curl -X POST http://localhost:8080/follow/2 \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+### Timeline Endpoints
+```bash
+curl -H "Authorization: Bearer <TOKEN>" http://localhost:8080/timeline/db
+curl -H "Authorization: Bearer <TOKEN>" http://localhost:8080/timeline/cache
+```
+
+### Trending Endpoints
+```bash
+curl http://localhost:8080/trending/db?limit=10
+curl http://localhost:8080/trending/cache?limit=10
+```
+
+### Adaptive TTL (Conventional vs. Inverted)
+```bash
+curl http://localhost:8080/trending/ttl?mode=conventional&limit=10
+curl http://localhost:8080/trending/ttl?mode=inverted&limit=10
+```
+
+### TTL Metrics
+```bash
+curl http://localhost:8080/metrics/ttl?strategy=conventional
+curl http://localhost:8080/metrics/ttl?strategy=inverted
+```
 
 ## 📊 Benchmark Results Summary
 
