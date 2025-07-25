@@ -34,7 +34,7 @@ DB_PASSWORD=postgres
 DB_NAME=thesis_db
 REDIS_ADDR=localhost:6379
 JWT_SECRET=myStrongSecretKeyHere
-
+```
 
 
 ## 🚀 How to Run
