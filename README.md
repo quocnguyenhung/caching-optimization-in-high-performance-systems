@@ -1,25 +1,32 @@
-
 # Caching Optimization for High-Performance Systems
 
-This project demonstrates various caching strategies in the context of a social media backend system. It is the implementation for the thesis _"Caching Optimization for High-Performance Systems"_, using Go, PostgreSQL, and Redis to evaluate performance under different conditions.
+## 📎 Resources
+
+- 🔗 [Demo Video](https://www.youtube.com/watch?v=UdKiaBQyl5A)
+- 📄 [Thesis Report & Slides](https://drive.google.com/drive/folders/1zzhBtGxGyeFITczU0Efz6mBtrRfZf2im)
+
+---
+
+This project explores caching strategies in a social media backend. Implemented in Go, PostgreSQL, and Redis, it evaluates static TTL, adaptive TTL, and write-through caching using real benchmarks.
 
 ## 🔧 Features
 
 - JWT authentication
-- Write-through cache and fan-out on write (timeline)
-- Redis ZSet for trending
-- Adaptive TTL cache control
-- Full benchmarking pipeline using `wrk` and Lua scripting
+- Write-through caching with fan-out on write (timeline)
+- Redis ZSet-based trending cache
+- Adaptive TTL strategy for dynamic content
+- Benchmarking pipeline with `wrk` and Lua scripting
 
-## 📁 Technologies Used
+## 🧪 Tech Stack
 
 - Go
 - PostgreSQL
 - Redis
 - wrk (HTTP benchmarking)
-- Lua (for scripted requests)
+- Lua (scripting)
 
-## .env file
+## ⚙️ Environment (.env)
+```env
 DB_HOST=localhost
 DB_PORT=5433
 DB_USER=postgres
@@ -27,6 +34,7 @@ DB_PASSWORD=postgres
 DB_NAME=thesis_db
 REDIS_ADDR=localhost:6379
 JWT_SECRET=myStrongSecretKeyHere
+
 
 
 ## 🚀 How to Run
